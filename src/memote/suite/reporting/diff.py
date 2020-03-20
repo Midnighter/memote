@@ -30,8 +30,8 @@ class DiffReport(Report):
 
     Attributes
     ----------
-    diff_results : python.Dictionary
-        The dictionary structure of memote.MemoteResult objects.
+    diff_results : dict
+        A map from file names to `memote.MemoteResult` objects.
     configuration : memote.MemoteConfiguration
         A memote configuration structure.
 
