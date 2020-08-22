@@ -24,7 +24,7 @@ import json
 import logging
 from builtins import open
 
-from memote.suite.results.result import MemoteResult
+from memote.suite.results.memote_result import MemoteResult
 from memote.utils import jsonify
 
 
@@ -67,11 +67,7 @@ class ResultManager(object):
         LOGGER.info("Loading result from '%s'.", filename)
         if filename.endswith(".gz"):
             with gzip.open(filename, "rb") as file_handle:
-                result = MemoteResult(json.loads(file_handle.read().decode("utf-8")))
+                result = MemoteResult.parse_file(file_handle)
         else:
-            with open(filename, "r", encoding="utf-8") as file_handle:
-                result = MemoteResult(json.load(file_handle))
-        # TODO (Moritz Beber): Validate the read-in JSON maybe? Trade-off
-        #  between extra time taken and correctness. Maybe we re-visit this
-        #  issue when there was a new JSON format version needed.
+            result = MemoteResult.parse_file(filename)
         return result

@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+# Copyright 2020, Moritz E. Beber.
 # Copyright 2017 Novo Nordisk Foundation Center for Biosustainability,
 # Technical University of Denmark.
 #
@@ -7,7 +6,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,9 +26,8 @@ Provide the memote result object and managers for various situations.
 
 """
 
-from __future__ import absolute_import
 
-from memote.suite.results.result import *
+from memote.suite.results.memote_result import *
 from memote.suite.results.result_manager import *
 from memote.suite.results.repo_result_manager import *
 from memote.suite.results.sql_result_manager import *

@@ -23,7 +23,7 @@ import pytest
 from six import iteritems
 
 from memote.suite.reporting import HistoryReport
-from memote.suite.results.result import MemoteResult
+from memote.suite.results.memote_result import MemoteResult
 
 
 MOCK_CONFIG_SCORES = {

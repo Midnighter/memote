@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+# Copyright 2020, Moritz E. Beber.
 # Copyright 2017 Novo Nordisk Foundation Center for Biosustainability,
 # Technical University of Denmark.
 #
@@ -15,20 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 """Collect results for reporting model quality."""
 
-from __future__ import absolute_import, division
 
 import logging
 import re
 
 import pytest
 
-from memote.suite.results.result import MemoteResult
+from memote.suite.results.memote_result import MemoteResult, ParametrizedTestCaseResult, \
+    TestCaseOutcome, TestCaseResult
 from memote.support.helpers import find_biomass_reaction
 
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class ResultCollectionPlugin(object):
@@ -78,12 +78,19 @@ class ResultCollectionPlugin(object):
         self._model = model
         self._sbml_ver = sbml_version
         self._exp_config = experimental_config
-        self.results = MemoteResult()
-        self.results.add_environment_information(self.results.meta)
+        self._results = None
+        self._cases = {}
         self._xcld = frozenset() if exclusive is None else frozenset(exclusive)
         self._skip = frozenset() if skip is None else frozenset(skip)
-        if LOGGER.getEffectiveLevel() <= logging.DEBUG:
+        if logger.getEffectiveLevel() <= logging.DEBUG:
             self._model.solver.configuration.verbosity = 3
+
+    @property
+    def results(self) -> MemoteResult:
+        """"""
+        if self._results is None:
+            self._results = MemoteResult(tests=self._cases)
+        return self._results
 
     def pytest_generate_tests(self, metafunc):
         """Parametrize marked functions at runtime."""
@@ -126,11 +133,11 @@ class ResultCollectionPlugin(object):
     @pytest.hookimpl(tryfirst=True)
     def pytest_runtest_teardown(self, item):
         """Collect the annotation from each test case and store it."""
-        case = self.results.cases.setdefault(item.obj.__name__, dict())
+        case = self._cases.setdefault(item.obj.__name__, {})
         if hasattr(item.obj, "annotation"):
             case.update(item.obj.annotation)
         else:
-            LOGGER.debug(
+            logger.error(
                 "Test case '%s' has no annotation (%s).", item.obj.__name__, item.nodeid
             )
 
@@ -138,7 +145,11 @@ class ResultCollectionPlugin(object):
         """
         Log pytest results for each test.
 
-        The categories are passed, failed, error, skipped and marked to fail.
+        The outcome can be passed, failed, or skipped. The status report occurs at
+        different points in the run. It can be when pytest has done setup, call,
+        or teardown. We are mainly interested in the call phase but need to colleced
+        information from skipped tests, too, which are never called. We are not
+        interested in the teardown status report.
 
         Parameters
         ----------
@@ -155,18 +166,15 @@ class ResultCollectionPlugin(object):
         if match is not None:
             param = match.group("param")
             item_name = item_name[: match.start()]
-            LOGGER.debug("%s with parameter %s %s", item_name, param, report.outcome)
-        else:
-            LOGGER.debug("%s %s", item_name, report.outcome)
-
-        case = self.results.cases.setdefault(item_name, dict())
-
-        if match is not None:
-            case["duration"] = case.setdefault("duration", dict())
+            logger.debug("%s with parameter %s %s", item_name, param, report.outcome)
+            case = self._cases.setdefault(item_name, {})
+            case["duration"] = case.setdefault("duration", {})
             case["duration"][param] = report.duration
-            case["result"] = case.setdefault("result", dict())
+            case["result"] = case.setdefault("result", {})
             case["result"][param] = report.outcome
         else:
+            logger.debug("%s %s", item_name, report.outcome)
+            case = self._cases.setdefault(item_name, {})
             case["duration"] = report.duration
             case["result"] = report.outcome
 

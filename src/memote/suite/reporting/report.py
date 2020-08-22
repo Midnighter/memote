@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+# Copyright 2020, Moritz E. Beber.
 # Copyright 2017 Novo Nordisk Foundation Center for Biosustainability,
 # Technical University of Denmark.
 #
@@ -7,7 +6,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,12 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 """Provide an abstract report base class that sets the interface."""
 
-from __future__ import absolute_import
 
 import logging
 from string import Template
+from typing import TYPE_CHECKING
 
 from importlib_resources import read_text
 from pandas import DataFrame
@@ -30,10 +30,14 @@ import memote.suite.templates as templates
 from memote.utils import jsonify
 
 
-LOGGER = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from memote import MemoteResult, ReportConfiguration
 
 
-class Report(object):
+logger = logging.getLogger(__name__)
+
+
+class Report:
     """
     Determine the abstract report interface.
 
@@ -46,7 +50,9 @@ class Report(object):
 
     """
 
-    def __init__(self, result, configuration, **kwargs):
+    def __init__(
+        self, result: "MemoteResult", configuration: "ReportConfiguration", **kwargs
+    ):
         """
         Fuse a collective result with a report configuration.
 
@@ -54,8 +60,8 @@ class Report(object):
         ----------
         result : memote.MemoteResult
             The dictionary structure of results.
-        configuration : memote.MemoteConfiguration
-            A memote configuration structure.
+        configuration : memote.ReportConfiguration
+            A memote report configuration structure.
 
         """
         super(Report, self).__init__(**kwargs)

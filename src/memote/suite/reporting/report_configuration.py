@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+# Copyright 2020, Moritz E. Beber.
 # Copyright 2017 Novo Nordisk Foundation Center for Biosustainability,
 # Technical University of Denmark.
 #
@@ -7,7 +6,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,14 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 """Configure the layout and scoring of test reports."""
 
-from __future__ import absolute_import
 
 import logging
-from builtins import open
+from typing import Dict, List, Optional
 
 from importlib_resources import open_text
+from pydantic import BaseModel
 from ruamel.yaml import YAML
 
 import memote.suite.templates as templates
@@ -30,47 +30,68 @@ import memote.suite.templates as templates
 
 __all__ = ("ReportConfiguration",)
 
-LOGGER = logging.getLogger(__name__)
+
+logger = logging.getLogger(__name__)
 yaml = YAML(typ="safe")
 
 
-class ReportConfiguration(dict):
+class ReportCard(BaseModel):
+
+    title: str
+    cases: List[str]
+
+
+class UnscoredSection(BaseModel):
+
+    title: str
+    cards: Dict[str, ReportCard]
+    description: Optional[str] = None
+
+
+class ScoredReportCard(ReportCard):
+
+    weight: float = 1.0
+
+
+class ScoredSection(UnscoredSection):
+
+    cards: Dict[str, ScoredReportCard]
+
+
+class Sections(BaseModel):
+
+    scored: ScoredSection
+    unscored: UnscoredSection
+
+
+class ReportConfiguration(BaseModel):
     """Collect the metabolic model test suite results."""
 
-    def __init__(self, *args, **kwargs):
-        """
-        Instantiate a configuration structure.
-
-        Parameters
-        ----------
-        args :
-        kwargs :
-
-        """
-        super(ReportConfiguration, self).__init__(*args, **kwargs)
+    sections: Sections
+    weights: Dict[str, float]
 
     @classmethod
-    def load(cls, filename=None):
+    def load(cls, filename=None) -> "ReportConfiguration":
         """Load a test report configuration."""
         if filename is None:
-            LOGGER.debug("Loading default configuration.")
+            logger.debug("Loading default configuration.")
             with open_text(
                 templates, "test_config.yml", encoding="utf-8"
             ) as file_handle:
                 content = yaml.load(file_handle)
         else:
-            LOGGER.debug("Loading custom configuration '%s'.", filename)
+            logger.debug("Loading custom configuration '%s'.", filename)
             try:
                 with open(filename, encoding="utf-8") as file_handle:
                     content = yaml.load(file_handle)
             except IOError as err:
-                LOGGER.error(
+                logger.error(
                     "Failed to load the custom configuration '%s'. Skipping.", filename
                 )
-                LOGGER.debug(str(err))
-                content = dict()
-        return cls(content)
+                logger.debug(str(err))
+                content = {}
+        return cls.parse_obj(content)
 
-    def merge(self, other):
+    def merge(self, other: "ReportConfiguration") -> "ReportConfiguration":
         """Merge a custom configuration."""
-        self.update(other)
+        return type(self).parse_obj(self.dict().update(other.dict()))
