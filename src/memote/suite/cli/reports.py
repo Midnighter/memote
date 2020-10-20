@@ -163,7 +163,6 @@ def snapshot(
     _, results = api.test_model(
         model_obj,
         sbml_version=sbml_ver,
-        results=True,
         pytest_args=pytest_args,
         skip=skip,
         exclusive=exclusive,
@@ -260,7 +259,6 @@ def _test_diff(
     _, diff_results = api.test_model(
         model,
         sbml_version=sbml_ver,
-        results=True,
         pytest_args=pytest_args,
         skip=skip,
         exclusive=exclusive,

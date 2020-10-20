@@ -207,14 +207,14 @@ def show_versions():
     print_dependencies("memote")
 
 
-def jsonify(result: "MemoteResult", pretty=False):
+def jsonify(result: "MemoteResult", pretty: bool = False) -> str:
     """
-    Turn a nested object into a (compressed) JSON string.
+    Turn a memote result object into a (compressed) JSON string.
 
     Parameters
     ----------
-    result : dict
-        Any kind of dictionary structure.
+    result : MemoteResult
+        A memote result object.
     pretty : bool, optional
         Whether to format the resulting JSON in a more legible way (
         default False).

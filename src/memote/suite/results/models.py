@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+# Copyright 2020, Moritz E. Beber.
 # Copyright 2018 Novo Nordisk Foundation Center for Biosustainability,
 # Technical University of Denmark.
 #
@@ -15,26 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 """Persist the memote test suite results in a database."""
 
-from __future__ import absolute_import
 
 import json
-import logging
 from gzip import GzipFile
 from io import BytesIO
 
-from future.utils import raise_with_traceback
 from sqlalchemy import Column, DateTime, Integer, LargeBinary, Unicode, UnicodeText
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.types import TypeDecorator
 
-from memote.utils import jsonify, log_json_incompatible_types
+from memote.utils import jsonify
 
 
 __all__ = ("Result",)
 
-LOGGER = logging.getLogger(__name__)
 
 Base = declarative_base()
 
@@ -69,15 +65,11 @@ class BJSON(TypeDecorator):
 
     def process_bind_param(self, value, dialect):
         """Convert the value to a JSON encoded string before storing it."""
-        try:
-            with BytesIO() as stream:
-                with GzipFile(fileobj=stream, mode="wb") as file_handle:
-                    file_handle.write(jsonify(value, pretty=False).encode("utf-8"))
-                output = stream.getvalue()
-            return output
-        except TypeError as error:
-            log_json_incompatible_types(value)
-            raise_with_traceback(error)
+        with BytesIO() as stream:
+            with GzipFile(fileobj=stream, mode="wb") as file_handle:
+                file_handle.write(jsonify(value, pretty=False).encode("utf-8"))
+            output = stream.getvalue()
+        return output
 
     def process_result_value(self, value, dialect):
         """Convert a JSON encoded string to a dictionary structure."""

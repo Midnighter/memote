@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+# Copyright 2020, Moritz E. Beber.
 # Copyright 2017 Novo Nordisk Foundation Center for Biosustainability,
 # Technical University of Denmark.
 #
@@ -15,13 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 """Programmatically interact with the memote test suite."""
 
-from __future__ import absolute_import
 
 import logging
 import os
 from io import open
+from typing import List, Optional
 
 import pytest
 from jinja2 import Environment, PackageLoader, select_autoescape
@@ -45,7 +45,8 @@ __all__ = (
     "history_report",
 )
 
-LOGGER = logging.getLogger(__name__)
+
+logger = logging.getLogger(__name__)
 
 
 def validate_model(path):
@@ -77,8 +78,7 @@ def validate_model(path):
 def test_model(
     model,
     sbml_version=None,
-    results=False,
-    pytest_args=None,
+    pytest_args: Optional[List[str]] = None,
     exclusive=None,
     skip=None,
     experimental=None,
@@ -93,8 +93,6 @@ def test_model(
         The metabolic model under investigation.
     sbml_version: tuple, optional
         A tuple reporting on the level, version, and FBC use of the SBML file.
-    results : bool, optional
-        Whether to return the results in addition to the return code.
     pytest_args : list, optional
         Additional arguments for the pytest suite.
     exclusive : iterable, optional
@@ -109,7 +107,7 @@ def test_model(
     -------
     int
         The return code of the pytest suite.
-    memote.Result, optional
+    memote.MemoteResult
         A nested dictionary structure that contains the complete test results.
 
     """
@@ -119,7 +117,7 @@ def test_model(
         pytest_args.extend(["--tb", "short"])
     if TEST_DIRECTORY not in pytest_args:
         pytest_args.append(TEST_DIRECTORY)
-    if "-s" not in pytest_args and LOGGER.getEffectiveLevel() <= logging.DEBUG:
+    if "-s" not in pytest_args and logger.getEffectiveLevel() <= logging.DEBUG:
         # Disable pytest capturing so that the solver log output can be seen
         # immediately.
         pytest_args.insert(0, "-s")
@@ -135,10 +133,7 @@ def test_model(
         experimental_config=experimental,
     )
     code = pytest.main(pytest_args, plugins=[plugin])
-    if results:
-        return code, plugin.results
-    else:
-        return code
+    return code, plugin.results
 
 
 def snapshot_report(result, config=None, html=True):

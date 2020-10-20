@@ -59,7 +59,7 @@ def complete_failure(base):
     indirect=["model"],
 )
 def test_test_model_code(model, code):
-    assert api.test_model(model) == code
+    assert api.test_model(model)[0] == code
 
 
 @pytest.mark.parametrize(
@@ -70,7 +70,7 @@ def test_test_model_code(model, code):
     indirect=["model"],
 )
 def test_test_model_result(model):
-    _, result = api.test_model(model, results=True)
+    _, result = api.test_model(model)
     # TODO: Once introduced perform schema checks here.
     assert len(result) > 0
 
@@ -94,7 +94,7 @@ def test_test_model_timeout(model):
 )
 def test_snapshot_report_file(model, tmpdir):
     filename = str(tmpdir.join("index.html"))
-    _, results = api.test_model(model, results=True, pytest_args=["--tb", "no"])
+    _, results = api.test_model(model, pytest_args=["--tb", "no"])
     report = api.snapshot_report(results, html=True)
     assert report.startswith("<!doctype html>")
     # TODO: Perform some content checks here.

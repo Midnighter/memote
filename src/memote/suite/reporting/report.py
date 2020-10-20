@@ -20,18 +20,18 @@
 
 import logging
 from string import Template
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Set
 
 from importlib_resources import read_text
 from pandas import DataFrame
-from six import iteritems, itervalues
 
 import memote.suite.templates as templates
+from memote.suite.reporting.report_configuration import ReportCard
 from memote.utils import jsonify
 
 
 if TYPE_CHECKING:
-    from memote import MemoteResult, ReportConfiguration
+    from memote import MemoteResult, ParametrizedTestCaseResult, ReportConfiguration
 
 
 logger = logging.getLogger(__name__)
@@ -89,20 +89,28 @@ class Report:
             report_type=self._report_type, results=self.render_json()
         )
 
-    def get_configured_tests(self):
+    def get_configured_tests(self) -> Set[str]:
         """Get tests explicitly configured."""
-        tests_on_cards = set()
-        # Add scored tests to the set.
-        for card in itervalues(self.config["cards"]["scored"]["sections"]):
-            tests_on_cards.update(card.get("cases", []))
-        # Add all other tests.
-        for card, content in iteritems(self.config["cards"]):
-            if card == "scored":
-                continue
-            tests_on_cards.update(content.get("cases", []))
-        return tests_on_cards
+        scored_tests = {
+            test
+            for card in self.config.sections.scored.cards.values()
+            for test in card.cases
+        }
+        unscored_tests = {
+            test
+            for card in self.config.sections.unscored.cards.values()
+            for test in card.cases
+        }
+        shared = scored_tests.intersection(unscored_tests)
+        if shared:
+            logger.error(
+                "Bad report configuration. The following test(s) appear both in the "
+                "scored and unscored section: %s",
+                ", ".join(shared),
+            )
+        return scored_tests.union(unscored_tests)
 
-    def determine_miscellaneous_tests(self):
+    def determine_miscellaneous_tests(self) -> None:
         """
         Identify tests not explicitly configured in test organization.
 
@@ -110,57 +118,45 @@ class Report:
         now appear in the report.
 
         """
-        tests_on_cards = self.get_configured_tests()
-        self.config["cards"].setdefault("misc", dict())
-        self.config["cards"]["misc"]["title"] = "Misc. Tests"
-        self.config["cards"]["misc"]["cases"] = list(
-            set(self.result.cases) - set(tests_on_cards)
-        )
+        unconfigured_tests = set(self.result.tests) - self.get_configured_tests()
+        if unconfigured_tests:
+            misc = self.config.sections.unscored.cards.setdefault(
+                "misc", ReportCard(title="Misc. Tests", cases=[])
+            )
+            misc.cases.extend(unconfigured_tests)
 
     def compute_score(self):
         """Calculate the overall test score using the configuration."""
-        # LOGGER.info("Begin scoring")
-        cases = self.get_configured_tests() | set(self.result.cases)
-        scores = DataFrame({"score": 0.0, "max": 1.0}, index=sorted(cases))
-        self.result.setdefault("score", dict())
-        self.result["score"]["sections"] = list()
+        scores = DataFrame({"score": 0.0, "max": 1.0}, index=sorted(self.result.tests))
         # Calculate the scores for each test individually.
-        for test, result in iteritems(self.result.cases):
-            # LOGGER.info("Calculate score for test: '%s'.", test)
+        for test, result in self.result.tests.items():
             # Test metric may be a dictionary for a parametrized test.
-            metric = result["metric"]
-            if hasattr(metric, "items"):
-                result["score"] = test_score = dict()
+            if isinstance(result, ParametrizedTestCaseResult):
                 total = 0.0
-                for key, value in iteritems(metric):
+                for key, value in result.metric:
                     value = 1.0 - value
                     total += value
-                    test_score[key] = value
+                    result.score[key] = value
                 # For some reason there are parametrized tests without cases.
-                if len(metric) == 0:
-                    metric = 0.0
+                if len(result.metric) == 0:
+                    score = 0.0
                 else:
-                    metric = total / len(metric)
+                    score = total / len(result.metric)
             else:
-                metric = 1.0 - metric
-            scores.at[test, "score"] = metric
-            scores.loc[test, :] *= self.config["weights"].get(test, 1.0)
+                result.score = 1.0 - result.metric
+                score = result.score
+            scores.at[test, "score"] = score
+            scores.loc[test, :] *= self.config.weights.get(test, 1.0)
         score = 0.0
         maximum = 0.0
         # Calculate the scores for each section considering the individual test
         # case scores.
-        for section_id, card in iteritems(self.config["cards"]["scored"]["sections"]):
-            # LOGGER.info("Calculate score for section: '%s'.", section_id)
-            cases = card.get("cases", None)
-            if cases is None:
+        for card_id, card in self.config.sections.scored.cards.items():
+            if not card.cases:
                 continue
-            card_score = scores.loc[cases, "score"].sum()
-            card_total = scores.loc[cases, "max"].sum()
-            # Format results nicely to work immediately with Vega Bar Chart.
-            section_score = {"section": section_id, "score": card_score / card_total}
-            self.result["score"]["sections"].append(section_score)
-            # Calculate the final score for the entire model.
-            weight = card.get("weight", 1.0)
-            score += card_score * weight
-            maximum += card_total * weight
-        self.result["score"]["total_score"] = score / maximum
+            card_score = scores.loc[card.cases, "score"].sum()
+            card_total = scores.loc[card.cases, "max"].sum()
+            card.score = card_score / card_total
+            score += card_score * card.weight
+            maximum += card_total * card.weight
+        self.config.sections.scored.score = score / maximum

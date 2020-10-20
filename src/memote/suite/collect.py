@@ -23,8 +23,12 @@ import re
 
 import pytest
 
-from memote.suite.results.memote_result import MemoteResult, ParametrizedTestCaseResult, \
-    TestCaseOutcome, TestCaseResult
+from memote.suite.results.memote_result import (
+    MemoteResult,
+    ParametrizedTestCaseResult,
+    TestCaseOutcome,
+    TestCaseResult,
+)
 from memote.support.helpers import find_biomass_reaction
 
 
@@ -78,7 +82,6 @@ class ResultCollectionPlugin(object):
         self._model = model
         self._sbml_ver = sbml_version
         self._exp_config = experimental_config
-        self._results = None
         self._cases = {}
         self._xcld = frozenset() if exclusive is None else frozenset(exclusive)
         self._skip = frozenset() if skip is None else frozenset(skip)
@@ -88,9 +91,7 @@ class ResultCollectionPlugin(object):
     @property
     def results(self) -> MemoteResult:
         """"""
-        if self._results is None:
-            self._results = MemoteResult(tests=self._cases)
-        return self._results
+        return MemoteResult(tests=self._cases)
 
     def pytest_generate_tests(self, metafunc):
         """Parametrize marked functions at runtime."""

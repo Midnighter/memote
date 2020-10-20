@@ -51,11 +51,13 @@ class UnscoredSection(BaseModel):
 class ScoredReportCard(ReportCard):
 
     weight: float = 1.0
+    score: float = 0.0
 
 
 class ScoredSection(UnscoredSection):
 
     cards: Dict[str, ScoredReportCard]
+    score: float = 0.0
 
 
 class Sections(BaseModel):

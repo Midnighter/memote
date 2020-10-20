@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+# Copyright 2020, Moritz E. Beber.
 # Copyright 2017 Novo Nordisk Foundation Center for Biosustainability,
 # Technical University of Denmark.
 #
@@ -15,14 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 """Provide the memote result managers for various storage backends."""
 
-from __future__ import absolute_import
 
 import gzip
-import json
 import logging
-from builtins import open
 
 from memote.suite.results.memote_result import MemoteResult
 from memote.utils import jsonify
@@ -30,15 +27,16 @@ from memote.utils import jsonify
 
 __all__ = ("ResultManager",)
 
-LOGGER = logging.getLogger(__name__)
+
+logger = logging.getLogger(__name__)
 
 
-class ResultManager(object):
+class ResultManager:
     """Manage storage of results to JSON files."""
 
     def __init__(self, **kwargs):
         """Initialize a JSON file storage manager."""
-        super(ResultManager, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def store(self, result, filename, pretty=True):
         """
@@ -54,7 +52,7 @@ class ResultManager(object):
             Whether (default) or not to write JSON in a more legible format.
 
         """
-        LOGGER.info("Storing result in '%s'.", filename)
+        logger.info("Storing result in '%s'.", filename)
         if filename.endswith(".gz"):
             with gzip.open(filename, "wb") as file_handle:
                 file_handle.write(jsonify(result, pretty=pretty).encode("utf-8"))
@@ -64,7 +62,7 @@ class ResultManager(object):
 
     def load(self, filename):
         """Load a result from the given JSON file."""
-        LOGGER.info("Loading result from '%s'.", filename)
+        logger.info("Loading result from '%s'.", filename)
         if filename.endswith(".gz"):
             with gzip.open(filename, "rb") as file_handle:
                 result = MemoteResult.parse_file(file_handle)

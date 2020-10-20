@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+# Copyright 2020, Moritz E. Beber.
 # Copyright 2017 Novo Nordisk Foundation Center for Biosustainability,
 # Technical University of Denmark.
 #
@@ -15,23 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 """Provide a memote result manager that integrates with a git repository."""
 
-from __future__ import absolute_import
 
 import logging
-from collections import namedtuple
 from os.path import join
+from typing import TYPE_CHECKING, Optional
 
+from memote.suite.results.memote_result import GitCommitInfo, MetaInformation
 from memote.suite.results.result_manager import ResultManager
+
+
+if TYPE_CHECKING:
+    from memote.suite.results.memote_result import MemoteResult
 
 
 __all__ = ("RepoResultManager",)
 
-LOGGER = logging.getLogger(__name__)
 
-
-GitInfo = namedtuple("GitInfo", ["hexsha", "author", "email", "authored_on"])
+logger = logging.getLogger(__name__)
 
 
 class RepoResultManager(ResultManager):
@@ -78,7 +80,7 @@ class RepoResultManager(ResultManager):
             commit = self._repo.head.commit
         else:
             commit = self._repo.commit(commit)
-        return GitInfo(
+        return GitCommitInfo(
             hexsha=commit.hexsha,
             author=commit.author.name,
             email=commit.author.email,
@@ -104,14 +106,11 @@ class RepoResultManager(ResultManager):
         return join(self._backend, "{}.json.gz".format(git_info.hexsha))
 
     @staticmethod
-    def add_git(meta, git_info):
+    def add_git(meta: MetaInformation, git_info: GitCommitInfo):
         """Enrich the result meta information with commit data."""
-        meta["hexsha"] = git_info.hexsha
-        meta["author"] = git_info.author
-        meta["email"] = git_info.email
-        meta["authored_on"] = git_info.authored_on.isoformat(" ")
+        meta.git_info = git_info
 
-    def store(self, result, commit=None, **kwargs):
+    def store(self, result: "MemoteResult", commit: Optional[str] = None, **kwargs):
         """
         Store a result in a JSON file attaching git meta information.
 
@@ -133,9 +132,9 @@ class RepoResultManager(ResultManager):
     def load(self, commit=None):
         """Load a result from the storage directory."""
         git_info = self.record_git_info(commit)
-        LOGGER.debug("Loading the result for commit '%s'.", git_info.hexsha)
+        logger.debug("Loading the result for commit '%s'.", git_info.hexsha)
         filename = self.get_filename(git_info)
-        LOGGER.debug("Loading the result '%s'.", filename)
+        logger.debug("Loading the result '%s'.", filename)
         result = super(RepoResultManager, self).load(filename)
         self.add_git(result.meta, git_info)
         return result

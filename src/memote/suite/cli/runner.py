@@ -253,7 +253,6 @@ def run(
     code, result = api.test_model(
         model=model,
         sbml_version=sbml_ver,
-        results=True,
         pytest_args=pytest_args,
         skip=skip,
         exclusive=exclusive,
@@ -362,7 +361,6 @@ def _test_history(
     _, result = api.test_model(
         model,
         sbml_version=sbml_ver,
-        results=True,
         pytest_args=pytest_args,
         skip=skip,
         exclusive=exclusive,

@@ -27,7 +27,14 @@ from depinfo import get_pkg_info
 from pydantic import BaseModel, Field
 
 
-__all__ = ("MemoteResult", "TestCaseOutcome", "TestCaseResult", "ParametrizedTestCaseResult")
+__all__ = (
+    "MemoteResult",
+    "TestCaseOutcome",
+    "TestCaseResult",
+    "ParametrizedTestCaseResult",
+    "MetaInformation",
+    "GitCommitInfo",
+)
 
 
 @unique
@@ -49,6 +56,15 @@ class TestCaseOutcome(Enum):
     Skipped = "skipped"
 
 
+class GitCommitInfo(BaseModel):
+    """Define git commit information."""
+
+    hexsha: Optional[str] = None
+    author: Optional[str] = None
+    email: Optional[str] = None
+    authored_on: Optional[datetime] = None
+
+
 class MetaInformation(BaseModel):
     """Define the meta information."""
 
@@ -57,6 +73,7 @@ class MetaInformation(BaseModel):
     release: str = Field(default_factory=release)
     python: str = Field(default_factory=python_version)
     packages: Dict[str, str] = get_pkg_info("memote")
+    git_info: Optional[GitCommitInfo] = None
 
 
 Scalar = Union[float, int, bool, str]
@@ -72,6 +89,7 @@ class TestCaseResult(BaseModel):
     duration: Optional[float] = None
     message: Optional[str] = None
     metric: Optional[float] = None
+    score: Optional[float] = None
     data: Optional[Union[Equilibrator, List[Scalar], Dict, Scalar]] = None
 
 
@@ -84,6 +102,7 @@ class ParametrizedTestCaseResult(BaseModel):
     duration: Dict[str, float] = {}
     message: Dict[str, str] = {}
     metric: Dict[str, float] = {}
+    score: Dict[str, float] = {}
     data: Dict[str, Union[Dict, List[Scalar], Scalar]] = {}
 
 

@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+# Copyright 2020, Moritz E. Beber.
 # Copyright 2017 Novo Nordisk Foundation Center for Biosustainability,
 # Technical University of Denmark.
 #
@@ -15,11 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 """Provide a memote result manager that is git aware and uses a SQL database."""
 
-from __future__ import absolute_import
 
 import logging
+from typing import Optional
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -32,7 +32,9 @@ from memote.suite.results.repo_result_manager import RepoResultManager
 
 __all__ = ("SQLResultManager",)
 
-LOGGER = logging.getLogger(__name__)
+
+logger = logging.getLogger(__name__)
+
 
 Session = sessionmaker()
 
@@ -56,7 +58,7 @@ class SQLResultManager(RepoResultManager):
         Base.metadata.create_all(self._backend, checkfirst=True)
         self.session = Session(bind=self._backend)
 
-    def store(self, result, commit=None, **kwargs):
+    def store(self, result: "MemoteResult", commit: Optional[str] = None, **kwargs):
         """
         Store a result in a JSON file attaching git meta information.
 
@@ -73,11 +75,11 @@ class SQLResultManager(RepoResultManager):
         git_info = self.record_git_info(commit)
         try:
             row = self.session.query(Result).filter_by(hexsha=git_info.hexsha).one()
-            LOGGER.info("Updating result '%s'.", git_info.hexsha)
-            row.memote_result = result
+            logger.info("Updating result '%s'.", git_info.hexsha)
+            row.memote_result = result.dict()
         except NoResultFound:
-            row = Result(memote_result=result)
-            LOGGER.info("Storing result '%s'.", git_info.hexsha)
+            row = Result(memote_result=result.dict())
+            logger.info("Storing result '%s'.", git_info.hexsha)
         row.hexsha = git_info.hexsha
         row.author = git_info.author
         row.email = git_info.email
@@ -88,7 +90,7 @@ class SQLResultManager(RepoResultManager):
     def load(self, commit=None):
         """Load a result from the database."""
         git_info = self.record_git_info(commit)
-        LOGGER.info("Loading result from '%s'.", git_info.hexsha)
+        logger.info("Loading result from '%s'.", git_info.hexsha)
         result = MemoteResult.parse_obj(
             self.session.query(Result.memote_result)
             .filter_by(hexsha=git_info.hexsha)
