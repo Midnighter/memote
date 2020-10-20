@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+# Copyright 2020, Moritz E. Beber.
 # Copyright 2017 Novo Nordisk Foundation Center for Biosustainability,
 # Technical University of Denmark.
 #
@@ -7,7 +6,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#     https://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,20 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 """Utility functions used by memote and its tests."""
 
-from __future__ import absolute_import
 
-import json
 import logging
-from builtins import dict, str
 from textwrap import TextWrapper
+from typing import TYPE_CHECKING, Sequence
 
 from depinfo import print_dependencies
-from future.utils import raise_with_traceback
-from numpy import isfinite
 from numpydoc.docscrape import NumpyDocString
-from six import string_types
+
+
+if TYPE_CHECKING:
+    from memote.suite.results import MemoteResult
 
 
 __all__ = (
@@ -38,14 +37,14 @@ __all__ = (
     "get_ids_and_bounds",
     "truncate",
     "wrapper",
-    "log_json_incompatible_types",
     "show_versions",
     "jsonify",
     "is_modified",
     "stdout_notifications",
 )
 
-LOGGER = logging.getLogger(__name__)
+
+logger = logging.getLogger(__name__)
 
 LIST_SLICE = 5
 FLOAT_FORMAT = 7.2
@@ -163,13 +162,13 @@ def filter_none(attribute, default):
         return attribute
 
 
-def truncate(sequence):
+def truncate(sequence: Sequence):
     """
     Create a potentially shortened text display of a list.
 
     Parameters
     ----------
-    sequence : list
+    sequence : Sequence
         An indexable sequence of elements.
 
     Returns
@@ -182,34 +181,6 @@ def truncate(sequence):
         return ", ".join(sequence[:LIST_SLICE] + ["..."])
     else:
         return ", ".join(sequence)
-
-
-def log_json_incompatible_types(obj):
-    """
-    Log types that are not JSON compatible.
-
-    Explore a nested dictionary structure and log types that are not JSON
-    compatible.
-
-    Parameters
-    ----------
-    obj : dict
-        A potentially nested dictionary.
-
-    """
-    keys_to_explore = list(obj)
-    while len(keys_to_explore) > 0:
-        key = keys_to_explore.pop()
-        if not isinstance(key, str):
-            LOGGER.info(type(key))
-        value = obj[key]
-        if isinstance(value, dict):
-            LOGGER.info("%s:", key)
-            log_json_incompatible_types(value)
-        elif not isinstance(value, JSON_TYPES):
-            LOGGER.info("%s: %s", key, type(value))
-        elif isinstance(value, (int, float)) and not isfinite(value):
-            LOGGER.info("%s: %f", key, value)
 
 
 def extended_summary(func):
@@ -236,13 +207,13 @@ def show_versions():
     print_dependencies("memote")
 
 
-def jsonify(obj, pretty=False):
+def jsonify(result: "MemoteResult", pretty=False):
     """
     Turn a nested object into a (compressed) JSON string.
 
     Parameters
     ----------
-    obj : dict
+    result : dict
         Any kind of dictionary structure.
     pretty : bool, optional
         Whether to format the resulting JSON in a more legible way (
@@ -266,24 +237,23 @@ def jsonify(obj, pretty=False):
             ensure_ascii=False,
         )
     try:
-        return json.dumps(obj, **params)
+        return result.json(**params)
     except (TypeError, ValueError) as error:
-        LOGGER.critical(
-            "The memote result structure is incompatible with the JSON " "standard."
+        logger.critical(
+            "The memote result structure is incompatible with the JSON standard."
         )
-        log_json_incompatible_types(obj)
-        raise_with_traceback(error)
+        raise error
 
 
 def flatten(list_of_lists):
     """Flatten a list of lists but maintain strings and ints as entries."""
     flat_list = []
     for sublist in list_of_lists:
-        if isinstance(sublist, string_types) or isinstance(sublist, int):
+        if isinstance(sublist, str) or isinstance(sublist, int):
             flat_list.append(sublist)
         elif sublist is None:
             continue
-        elif not isinstance(sublist, string_types) and len(sublist) == 1:
+        elif not isinstance(sublist, str) and len(sublist) == 1:
             flat_list.append(sublist[0])
         else:
             flat_list.append(tuple(sublist))
@@ -330,6 +300,6 @@ def stdout_notifications(notifications):
 
     """
     for error in notifications["errors"]:
-        LOGGER.error(error)
+        logger.error(error)
     for warn in notifications["warnings"]:
-        LOGGER.warning(warn)
+        logger.warning(warn)
