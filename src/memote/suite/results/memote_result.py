@@ -20,7 +20,7 @@
 
 from datetime import datetime
 from enum import Enum, unique
-from platform import python_version, release, system
+from platform import python_version, release, system  # noqa: F401
 from typing import Dict, List, Optional, Tuple, Union
 
 from depinfo import get_pkg_info
@@ -70,7 +70,7 @@ class MetaInformation(BaseModel):
 
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     platform: str = Field(default_factory=system)
-    release: str = Field(default_factory=release)
+    release: str = Field(default_factory=release)  # noqa: F811
     python: str = Field(default_factory=python_version)
     packages: Dict[str, str] = get_pkg_info("memote")
     git_info: Optional[GitCommitInfo] = None
@@ -81,6 +81,7 @@ Equilibrator = Tuple[List[Tuple[str, float]], List[str], List[str], List[str]]
 
 
 class TestCaseResult(BaseModel):
+    """Define the data model for a singular test case result."""
 
     title: str
     summary: str
@@ -94,6 +95,7 @@ class TestCaseResult(BaseModel):
 
 
 class ParametrizedTestCaseResult(BaseModel):
+    """Define the data model for a parametrized test case result."""
 
     title: str
     summary: str
