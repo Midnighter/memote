@@ -90,7 +90,7 @@ class ResultCollectionPlugin(object):
 
     @property
     def results(self) -> MemoteResult:
-        """"""
+        """Return a memote result instance with test outcomes."""
         return MemoteResult(tests=self._cases)
 
     def pytest_generate_tests(self, metafunc):
