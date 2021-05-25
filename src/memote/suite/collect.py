@@ -23,12 +23,7 @@ import re
 
 import pytest
 
-from memote.suite.results.memote_result import (
-    MemoteResult,
-    ParametrizedTestCaseResult,
-    TestCaseOutcome,
-    TestCaseResult,
-)
+from memote.suite.results.memote_result import MemoteResult
 from memote.support.helpers import find_biomass_reaction
 
 
