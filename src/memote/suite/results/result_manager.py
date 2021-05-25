@@ -65,7 +65,7 @@ class ResultManager:
         logger.info("Loading result from '%s'.", filename)
         if filename.endswith(".gz"):
             with gzip.open(filename, "rb") as file_handle:
-                result = MemoteResult.parse_file(file_handle)
+                result = MemoteResult.parse_raw(file_handle.read())
         else:
             result = MemoteResult.parse_file(filename)
         return result
