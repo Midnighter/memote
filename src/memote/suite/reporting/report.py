@@ -26,13 +26,14 @@ from importlib_resources import read_text
 from pandas import DataFrame
 
 import memote.suite.templates as templates
-from ..results import ParametrizedTestCaseResult
 from memote.suite.reporting.report_configuration import ReportCard
 from memote.utils import jsonify
 
+from ..results import MemoteResult, ParametrizedTestCaseResult
+
 
 if TYPE_CHECKING:
-    from memote import MemoteResult, ReportConfiguration
+    from memote import ReportConfiguration
 
 
 logger = logging.getLogger(__name__)
@@ -78,11 +79,11 @@ class Report:
         Parameters
         ----------
         pretty : bool, optional
-            Whether to format the resulting JSON in a more legible way (
-            default False).
+            Whether to format the resulting JSON in a more legible way (default False).
 
         """
-        return jsonify(self.result, pretty=pretty)
+        # TODO: Create combined results + config object.
+        return jsonify(dict(self.result.dict(), **self.config.dict()), pretty=pretty)
 
     def render_html(self):
         """Render an HTML report."""
@@ -134,7 +135,7 @@ class Report:
             # Test metric may be a dictionary for a parametrized test.
             if isinstance(result, ParametrizedTestCaseResult):
                 total = 0.0
-                for key, value in result.metric:
+                for key, value in result.metric.items():
                     value = 1.0 - value
                     total += value
                     result.score[key] = value

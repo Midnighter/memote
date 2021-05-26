@@ -112,4 +112,4 @@ class MemoteResult(BaseModel):
     """Define a MEMOTE result structure."""
 
     meta: MetaInformation = Field(default_factory=MetaInformation)
-    tests: Dict[str, Union[TestCaseResult, ParametrizedTestCaseResult]] = {}
+    tests: Dict[str, Union[ParametrizedTestCaseResult, TestCaseResult]] = {}

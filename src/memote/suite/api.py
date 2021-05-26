@@ -21,7 +21,7 @@
 import logging
 import os
 from io import open
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import pytest
 from jinja2 import Environment, PackageLoader, select_autoescape
@@ -35,6 +35,8 @@ from memote.suite.reporting import (
     SnapshotReport,
 )
 from memote.support import validation as val
+
+from .results import MemoteResult
 
 
 __all__ = (
@@ -182,7 +184,9 @@ def history_report(history, config=None, html=True):
         return report.render_json()
 
 
-def diff_report(diff_results, config=None, html=True):
+def diff_report(
+    diff_results: Dict[str, MemoteResult], config: ReportConfiguration = None, html=True
+):
     """
     Generate a diff report from a result set and configuration.
 

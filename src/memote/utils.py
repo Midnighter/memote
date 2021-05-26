@@ -18,16 +18,14 @@
 """Utility functions used by memote and its tests."""
 
 
+import json
 import logging
 from textwrap import TextWrapper
-from typing import TYPE_CHECKING, Sequence
+from typing import Dict, Sequence, Union
 
 from depinfo import print_dependencies
 from numpydoc.docscrape import NumpyDocString
-
-
-if TYPE_CHECKING:
-    from memote.suite.results import MemoteResult
+from pydantic import BaseModel
 
 
 __all__ = (
@@ -207,7 +205,7 @@ def show_versions():
     print_dependencies("memote")
 
 
-def jsonify(result: "MemoteResult", pretty: bool = False) -> str:
+def jsonify(result: Union[BaseModel, Dict], pretty: bool = False) -> str:
     """
     Turn a memote result object into a (compressed) JSON string.
 
@@ -237,7 +235,10 @@ def jsonify(result: "MemoteResult", pretty: bool = False) -> str:
             ensure_ascii=False,
         )
     try:
-        return result.json(**params)
+        if isinstance(result, BaseModel):
+            return result.json(**params)
+        else:
+            return json.dumps(result, **params)
     except (TypeError, ValueError) as error:
         logger.critical(
             "The memote result structure is incompatible with the JSON standard."

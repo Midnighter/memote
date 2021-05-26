@@ -15,16 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 """Render a one-time model report."""
 
-from __future__ import absolute_import
 
-import logging
-
-from memote.suite.reporting.report import Report
-
-
-LOGGER = logging.getLogger(__name__)
+from ...utils import jsonify
+from .report import Report
+from .snapshot_result import SnapshotResult
 
 
 class SnapshotReport(Report):
@@ -46,4 +43,23 @@ class SnapshotReport(Report):
         self._report_type = "snapshot"
         self.determine_miscellaneous_tests()
         self.compute_score()
-        self.result.update(self.config)
+
+    def render_json(self, pretty=False):
+        """
+        Render the snapshot report results as JSON.
+
+        Parameters
+        ----------
+        pretty : bool, optional
+            Whether to format the resulting JSON in a more legible way (default False).
+
+        """
+        return jsonify(
+            SnapshotResult(
+                meta=self.result.meta,
+                tests=self.result.tests,
+                sections=self.config.sections,
+                weights=self.config.weights,
+            ),
+            pretty=pretty,
+        )

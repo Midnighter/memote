@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-
+# Copyright 2021, Moritz E. Beber.
 # Copyright 2017 Novo Nordisk Foundation Center for Biosustainability,
 # Technical University of Denmark.
 #
@@ -15,14 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 """Provide commands for generating report files."""
 
-from __future__ import absolute_import
 
 import logging
 import os
 import sys
-from builtins import open
 from functools import partial
 from multiprocessing import Pool, cpu_count
 
@@ -37,6 +35,8 @@ import memote.suite.results as managers
 import memote.utils as utils
 from memote.suite.cli import CONTEXT_SETTINGS
 from memote.suite.reporting import ReportConfiguration
+
+from ..results import MemoteResult
 
 
 LOGGER = logging.getLogger(__name__)
@@ -373,9 +373,9 @@ def diff(
     diff_results = dict()
     model_and_model_ver_tuple = list()
     for model_path in models:
+        model_filename = os.path.basename(model_path)
         try:
-            model_filename = os.path.basename(model_path)
-            diff_results.setdefault(model_filename, dict())
+            diff_results.setdefault(model_filename, MemoteResult())
             model, model_ver, notifications = api.validate_model(model_path)
             if model is None:
                 head, tail = os.path.split(filename)

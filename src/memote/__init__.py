@@ -32,8 +32,8 @@ __version__ = get_versions()["version"]
 del get_versions
 
 
-from memote.utils import show_versions
 from memote.suite.api import *
 from memote.suite.results import *
 from memote.suite.reporting import *
 from memote.jinja2_extension import *
+from memote.utils import show_versions

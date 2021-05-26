@@ -28,7 +28,7 @@ from ruamel.yaml import YAML
 import memote.suite.templates as templates
 
 
-__all__ = ("ReportConfiguration",)
+__all__ = ("ReportConfiguration", "Sections")
 
 
 logger = logging.getLogger(__name__)
@@ -96,4 +96,4 @@ class ReportConfiguration(BaseModel):
 
     def merge(self, other: "ReportConfiguration") -> "ReportConfiguration":
         """Merge a custom configuration."""
-        return type(self).parse_obj(self.dict().update(other.dict()))
+        return type(self).parse_obj({**self.dict(), **other.dict()})
