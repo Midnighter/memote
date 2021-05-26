@@ -71,8 +71,7 @@ def test_test_model_code(model, code):
 )
 def test_test_model_result(model):
     _, result = api.test_model(model)
-    # TODO: Once introduced perform schema checks here.
-    assert len(result) > 0
+    assert len(result.tests) > 0
 
 
 @pytest.mark.parametrize("model", ["textbook"], indirect=["model"])

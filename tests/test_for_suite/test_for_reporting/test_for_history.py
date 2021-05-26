@@ -67,7 +67,7 @@ MOCK_CONFIG = {
 @pytest.fixture(scope="session")
 def mock_history_manager():
     """Build a mock history manager that already contains results."""
-    result1 = MemoteResult(
+    result1 = MemoteResult.parse_obj(
         {
             "meta": {
                 "branch": "master",
@@ -109,7 +109,7 @@ def mock_history_manager():
             },
         }
     )
-    result2 = MemoteResult(
+    result2 = MemoteResult.parse_obj(
         {
             "meta": {
                 "branch": "develop",

@@ -26,12 +26,13 @@ from importlib_resources import read_text
 from pandas import DataFrame
 
 import memote.suite.templates as templates
+from ..results import ParametrizedTestCaseResult
 from memote.suite.reporting.report_configuration import ReportCard
 from memote.utils import jsonify
 
 
 if TYPE_CHECKING:
-    from memote import MemoteResult, ParametrizedTestCaseResult, ReportConfiguration
+    from memote import MemoteResult, ReportConfiguration
 
 
 logger = logging.getLogger(__name__)
