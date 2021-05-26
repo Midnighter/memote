@@ -21,11 +21,13 @@
 import json
 import logging
 from textwrap import TextWrapper
-from typing import Dict, Sequence, Union
+from typing import Any, Dict, Optional, Sequence, Union
 
 from depinfo import print_dependencies
 from numpydoc.docscrape import NumpyDocString
 from pydantic import BaseModel
+
+from .suite.results.memote_result import FormatType
 
 
 __all__ = (
@@ -40,7 +42,6 @@ __all__ = (
     "is_modified",
     "stdout_notifications",
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,13 @@ def register_with(registry):
     return decorator
 
 
-def annotate(title, format_type, message=None, data=None, metric=1.0):
+def annotate(
+    title: str,
+    format_type: str,
+    message: Optional[Union[Dict[str, str], str]] = None,
+    data: Optional[Union[Dict[str, Any], Any]] = None,
+    metric: Optional[Union[Dict[str, float], float]] = 1.0,
+):
     """
     Annotate a test case with info that should be displayed in the reports.
 
@@ -123,8 +130,7 @@ def annotate(title, format_type, message=None, data=None, metric=1.0):
     predefined keys as a dictionary.
 
     """
-    if format_type not in TYPES:
-        raise ValueError("Invalid type. Expected one of: {}.".format(", ".join(TYPES)))
+    assert format_type in FormatType.__members__
 
     def decorator(func):
         func.annotation = dict(

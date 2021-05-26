@@ -155,6 +155,7 @@ class ResultCollectionPlugin(object):
         """
         if report.when == "teardown":
             return
+
         item_name = report.location[2]
 
         # Check for a parametrized test.

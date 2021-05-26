@@ -41,10 +41,10 @@ __all__ = (
 class FormatType(Enum):
     """Define types for displaying a test result."""
 
-    Number = "number"
-    Count = "count"
-    Percent = "percent"
-    Raw = "raw"
+    number = "number"
+    count = "count"
+    percent = "percent"
+    raw = "raw"
 
 
 @unique
@@ -78,6 +78,7 @@ class MetaInformation(BaseModel):
 
 Scalar = Union[float, int, bool, str]
 Equilibrator = Tuple[List[Tuple[str, float]], List[str], List[str], List[str]]
+MinStoichiometry = List[List[str]]
 
 
 class TestCaseResult(BaseModel):
@@ -91,7 +92,9 @@ class TestCaseResult(BaseModel):
     message: Optional[str] = None
     metric: Optional[float] = None
     score: Optional[float] = None
-    data: Optional[Union[Equilibrator, List[Scalar], Dict, Scalar]] = None
+    data: Optional[
+        Union[Equilibrator, MinStoichiometry, List[Scalar], Dict, Scalar]
+    ] = None
 
 
 class ParametrizedTestCaseResult(BaseModel):
@@ -105,7 +108,7 @@ class ParametrizedTestCaseResult(BaseModel):
     message: Dict[str, str] = {}
     metric: Dict[str, float] = {}
     score: Dict[str, float] = {}
-    data: Dict[str, Union[Dict, List[Scalar], Scalar]] = {}
+    data: Dict[str, Optional[Union[Dict, List[Scalar], Scalar]]] = {}
 
 
 class MemoteResult(BaseModel):
