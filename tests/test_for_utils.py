@@ -104,7 +104,7 @@ def test_register_with(func, func_name):
             dict(title="Some Title", format_type="wrong_type"),
             one,
             "",
-            marks=pytest.mark.raises(exception=ValueError),
+            marks=pytest.mark.raises(exception=AssertionError),
         ),
     ],
 )
