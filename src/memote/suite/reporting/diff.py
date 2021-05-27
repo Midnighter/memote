@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Copyright 2017 Novo Nordisk Foundation Center for Biosustainability,
 # Technical University of Denmark.
 #
@@ -15,11 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 """Compare two or more models with one another side-by-side."""
 
-from __future__ import absolute_import
-
-from six import iteritems
 
 from memote.suite.reporting.report import Report
 
@@ -53,10 +49,10 @@ class DiffReport(Report):
         meta = base.setdefault("meta", dict())
         tests = base.setdefault("tests", dict())
         score = base.setdefault("score", dict())
-        for model_filename, result in iteritems(diff_results):
+        for model_filename, result in diff_results.items():
             if meta == dict():
                 meta = result["meta"]
-            for test_id, test_results in iteritems(result["tests"]):
+            for test_id, test_results in result["tests"].items():
                 tests.setdefault(test_id, dict())
                 if tests[test_id] == dict():
                     tests[test_id]["summary"] = test_results["summary"]
