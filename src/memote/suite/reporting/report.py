@@ -19,8 +19,9 @@
 
 
 import logging
+from abc import abstractmethod
 from string import Template
-from typing import TYPE_CHECKING, Set
+from typing import TYPE_CHECKING, Set, Optional
 
 from importlib_resources import read_text
 from pandas import DataFrame
@@ -53,7 +54,7 @@ class Report:
     """
 
     def __init__(
-        self, result: "MemoteResult", configuration: "ReportConfiguration", **kwargs
+        self, result: Optional["MemoteResult"], configuration: "ReportConfiguration", **kwargs
     ):
         """
         Fuse a collective result with a report configuration.
@@ -66,12 +67,13 @@ class Report:
             A memote report configuration structure.
 
         """
-        super(Report, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.result = result
         self.config = configuration
         self._report_type = None
         self._template = Template(read_text(templates, "index.html", encoding="utf-8"))
 
+    @abstractmethod
     def render_json(self, pretty=False):
         """
         Render the report results as JSON.
@@ -82,8 +84,7 @@ class Report:
             Whether to format the resulting JSON in a more legible way (default False).
 
         """
-        # TODO: Create combined results + config object.
-        return jsonify(dict(self.result.dict(), **self.config.dict()), pretty=pretty)
+        raise NotImplementedError()
 
     def render_html(self):
         """Render an HTML report."""

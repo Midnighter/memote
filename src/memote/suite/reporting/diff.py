@@ -17,7 +17,12 @@
 """Compare two or more models with one another side-by-side."""
 
 
+from typing import Dict
+
 from memote.suite.reporting.report import Report
+from .report_configuration import ReportConfiguration
+from ..results import MemoteResult
+from ...utils import jsonify
 
 
 class DiffReport(Report):
@@ -26,33 +31,54 @@ class DiffReport(Report):
 
     Attributes
     ----------
-    diff_results : python.Dictionary
-        The dictionary structure of memote.MemoteResult objects.
-    configuration : memote.MemoteConfiguration
+    diff_results : dict
+        A map from model identifiers to `memote.MemoteResult` objects.
+    configuration : memote.ReportConfiguration
         A memote configuration structure.
 
     """
 
-    def __init__(self, diff_results, configuration, **kwargs):
+    def __init__(self, diff_results: Dict[str, MemoteResult],
+                 configuration: ReportConfiguration, **kwargs):
         """Initialize the data."""
-        super(DiffReport, self).__init__(
+        super().__init__(
             result=None, configuration=configuration, **kwargs
         )
-        self.config = configuration
         self._report_type = "diff"
         self.result = self.format_and_score_diff_data(diff_results)
         self.result.update(self.config)
 
-    def format_and_score_diff_data(self, diff_results):
+    def render_json(self, pretty=False):
+        """
+        Render the snapshot report results as JSON.
+
+        Parameters
+        ----------
+        pretty : bool, optional
+            Whether to format the resulting JSON in a more legible way (default False).
+
+        """
+        return jsonify(
+            SnapshotResult(
+                meta=self.result.meta,
+                tests=self.result.tests,
+                sections=self.config.sections,
+                weights=self.config.weights,
+            ),
+            pretty=pretty,
+        )
+
+    def format_and_score_diff_data(self, diff_results: Dict[str, MemoteResult]):
         """Reformat the api results to work with the front-end."""
         base = dict()
         meta = base.setdefault("meta", dict())
         tests = base.setdefault("tests", dict())
         score = base.setdefault("score", dict())
         for model_filename, result in diff_results.items():
+            result_obj = result.dict()
             if meta == dict():
-                meta = result["meta"]
-            for test_id, test_results in result["tests"].items():
+                meta = result_obj["meta"]
+            for test_id, test_results in result_obj["tests"].items():
                 tests.setdefault(test_id, dict())
                 if tests[test_id] == dict():
                     tests[test_id]["summary"] = test_results["summary"]
@@ -90,7 +116,7 @@ class DiffReport(Report):
             score["total_score"]["diff"].append(
                 {
                     "model": model_filename,
-                    "total_score": self.result["score"]["total_score"],
+                    "total_score": self.config.sections.scored.score
                 }
             )
             for section in self.result["score"]["sections"]:
